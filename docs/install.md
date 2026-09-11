@@ -15,6 +15,31 @@ Everything below is typed into the **Terminal** app.
 
 Then see [Starting the toolkit](starting.md).
 
+## The whole thing at a glance
+
+If you just want to see where this is going, here is the full sequence. Each
+step is explained below — do not paste this block in one go.
+
+```bash
+# one top folder
+mkdir -p ~/Documents/pegRNA && cd ~/Documents/pegRNA
+
+# the toolkit (public)
+git clone https://github.com/fengyuxin344-crypto/pegRNA-toolkit.git
+
+# PRIDICT2.0
+git clone https://github.com/uzh-dqbm-cmi/PRIDICT2.git
+
+# the NGS pipeline (private - ask Yuxin for access first)
+git clone https://github.com/fengyuxin344-crypto/ngs-analysis-pipeline.git ngs_analysis
+
+# OptiPrime, optional
+cd pegRNA-toolkit && git clone https://github.com/alvin-hsu/optiprime-src.git && cd ..
+```
+
+Three conda environments then get built on top: `pridict2`, `optiprime`
+(optional) and `snake_libanalysis`.
+
 ---
 
 ## Part 1 — Install the basics
@@ -79,7 +104,8 @@ and check again.
 
 ## Part 2 — Folders and the toolkit
 
-One top folder holds everything.
+One top folder holds everything. The toolkit and the pipeline live in two
+separate repositories, cloned side by side inside it.
 
 ```bash
 mkdir -p ~/Documents/pegRNA
@@ -89,6 +115,11 @@ git clone https://github.com/fengyuxin344-crypto/pegRNA-toolkit.git
 
 You now have `~/Documents/pegRNA/pegRNA-toolkit/`. The remaining parts add the
 engines and the pipeline beside it.
+
+!!! note "Two repositories, not one"
+    The toolkit is public. The NGS pipeline is in a separate private
+    repository, because it contains a collaborator's code and unpublished
+    library designs. You need to be invited to it — see Part 4.
 
 Target layout when you are done:
 
@@ -273,9 +304,28 @@ A table with `pegRNA_name`, ..., `OptiPrime_score` means OptiPrime is ready.
 The pipeline ships an `env.yaml` that already includes snakemake, so build the
 environment from that file and then add the extras the toolkit and macOS need.
 
-<!-- TODO: say how a new user obtains ngs_analysis/ — a repo URL, a shared
-     drive, or "ask Yuxin". Right now this is the one step someone cannot
-     complete on their own. -->
+### Get the pipeline
+
+The pipeline is in a separate **private** repository. Ask Yuxin for access
+first — you will get an email invitation from GitHub, which you have to
+accept before the clone will work.
+
+Then clone it beside the toolkit:
+
+```bash
+cd ~/Documents/pegRNA
+git clone https://github.com/fengyuxin344-crypto/ngs-analysis-pipeline.git ngs_analysis
+```
+
+!!! warning "Keep the trailing `ngs_analysis`"
+    Without it the folder is named `ngs-analysis-pipeline`, which does not
+    match the layout used throughout this guide. Git will not complain, but
+    every path below will be wrong.
+
+If the clone fails with `Repository not found`, you have not accepted the
+invitation yet, or you are signed in to git as a different GitHub account.
+
+### Build the environment
 
 ```bash
 cd ~/Documents/pegRNA/ngs_analysis

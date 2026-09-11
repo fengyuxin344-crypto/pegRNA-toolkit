@@ -1,0 +1,71 @@
+site_name: Self-Targeting pegRNA Toolkit
+site_description: Design self-targeting pegRNA libraries and analyse the sequencing readout, from one local interface.
+site_url: https://fengyuxin344-crypto.github.io/pegRNA-toolkit/
+
+repo_url: https://github.com/fengyuxin344-crypto/pegRNA-toolkit
+repo_name: fengyuxin344-crypto/pegRNA-toolkit
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette:
+    - scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: install.md
+      - Starting the toolkit: starting.md
+  - Guides:
+      - Library design: library-design.md
+      - NGS analysis: ngs-analysis.md
+  - Reference:
+      - Troubleshooting: troubleshooting.md
+      - Cheat sheet: cheat-sheet.md
+      - Pipeline modifications: pipeline-modifications.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/fengyuxin344-crypto/pegRNA-toolkit

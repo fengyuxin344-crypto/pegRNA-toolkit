@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Targeting pegRNA Toolkit</title>
+<style>
+  :root{
+    --ink:#141b1a; --ink-soft:#4a5654; --ink-faint:#8a938f;
+    --paper:#f6f4ee; --card:#fffdf8; --line:#e0ddd2; --line-strong:#c9c5b6;
+    --accent:#1d6b52; --accent-soft:#e4efe9; --accent-line:#bcd8cc;
+    --warn:#9a5b13; --warn-soft:#f6ecdc;
+    --stop:#8a3324; --stop-soft:#f4e3df;
+    --mono:"SF Mono",ui-monospace,"Menlo",monospace;
+    --sans:"SF Pro Text",-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 24px 96px}
+  .wrap{max-width:820px;margin:0 auto}
+
+  header{padding:56px 0 40px;border-bottom:1px solid var(--line-strong)}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+  h1{font-size:34px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+  .lede{margin-top:14px;color:var(--ink-soft);font-size:16px;max-width:60ch}
+  .lede b{color:var(--ink);font-weight:600}
+
+  .stage{padding:36px 0;border-bottom:1px solid var(--line)}
+  .stage-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+  .num{font-family:var(--mono);font-size:13px;color:var(--paper);
+    background:var(--ink);width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .stage-head h2{font-size:20px;font-weight:600;letter-spacing:-.01em}
+  .stage-head .sub{color:var(--ink-faint);font-size:14px;margin-left:auto;
+    font-family:var(--mono)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:22px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);
+    margin-bottom:7px}
+  .hint{font-size:13px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
+  input[type=text],input[type=number]{width:100%;font-family:var(--mono);
+    font-size:14px;padding:10px 12px;border:1px solid var(--line-strong);
+    border-radius:8px;background:var(--paper);color:var(--ink)}
+  input:focus{outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+
+  .drop{border:1.5px dashed var(--line-strong);border-radius:10px;
+    padding:22px;text-align:center;cursor:pointer;transition:.15s;
+    background:var(--paper)}
+  .drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .drop.has{border-style:solid;border-color:var(--accent-line);
+    background:var(--accent-soft)}
+  .drop .ic{font-size:22px;color:var(--accent)}
+  .drop .fn{font-family:var(--mono);font-size:13px;color:var(--ink);margin-top:6px}
+  .drop .ph{font-size:14px;color:var(--ink-soft);margin-top:6px}
+
+  button.go{margin-top:18px;font-family:var(--sans);font-size:14px;
+    font-weight:600;color:var(--paper);background:var(--accent);border:none;
+    padding:11px 20px;border-radius:8px;cursor:pointer;transition:.15s}
+  button.go:hover{background:#17563f}
+  button.go:disabled{background:var(--line-strong);cursor:not-allowed}
+
+  .out{margin-top:20px;display:none}
+  .out.show{display:block}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:1px;background:var(--line);border:1px solid var(--line);
+    border-radius:10px;overflow:hidden;margin-bottom:16px}
+  .stat div{background:var(--card);padding:14px 16px}
+  .stat .v{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--ink)}
+  .stat .l{font-size:12px;color:var(--ink-faint);margin-top:2px}
+
+  .skip{border:1px solid var(--warn-soft);background:var(--warn-soft);
+    border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .skip h4{font-size:13px;color:var(--warn);font-weight:600;margin-bottom:8px;
+    font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+  .skip ul{list-style:none;font-size:13px;color:var(--ink-soft)}
+  .skip li{padding:3px 0;font-family:var(--mono);line-height:1.5}
+  .skip li b{color:var(--ink)}
+
+  .dl{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);
+    font-size:14px;font-weight:600;color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);padding:10px 18px;border-radius:8px;
+    text-decoration:none;transition:.15s}
+  .dl:hover{background:#d8e8e0}
+
+  .cmd{background:#14201c;border-radius:10px;padding:16px 18px;margin-top:14px;
+    position:relative}
+  .cmd code{font-family:var(--mono);font-size:13px;color:#cfe6dc;
+    white-space:pre-wrap;word-break:break-all;line-height:1.7}
+  .cmd .cp{position:absolute;top:12px;right:12px;font-size:11px;
+    font-family:var(--mono);color:#7fae9c;background:transparent;
+    border:1px solid #2f4a41;border-radius:6px;padding:4px 9px;cursor:pointer}
+  .cmd .cp:hover{color:#cfe6dc;border-color:#4a6d60}
+
+  .err{border:1px solid var(--stop-soft);background:var(--stop-soft);
+    border-radius:10px;padding:14px 16px;margin-top:16px;font-size:14px;
+    color:var(--stop);display:none}
+  .err.show{display:block}
+  .err code{font-family:var(--mono);font-size:12px;display:block;margin-top:6px;
+    color:var(--ink-soft);white-space:pre-wrap}
+
+  .note{font-size:13px;color:var(--ink-faint);margin-top:20px;
+    padding-left:14px;border-left:2px solid var(--line-strong);line-height:1.6}
+
+  .tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .tab{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-faint);
+    background:none;border:none;padding:9px 16px;cursor:pointer;border-bottom:2px solid transparent;
+    margin-bottom:-1px;transition:.15s}
+  .tab:hover{color:var(--ink-soft)}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab .badge{font-family:var(--mono);font-size:10px;background:var(--accent-soft);
+    color:var(--accent);padding:1px 6px;border-radius:8px;margin-left:6px;
+    text-transform:uppercase;letter-spacing:.05em}
+  .pane{display:none}
+  .pane.active{display:block}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--paper);
+    border-top-color:transparent;border-radius:50%;animation:s .7s linear infinite;
+    vertical-align:-1px;margin-right:7px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .prog{margin-top:16px}
+  .pbar{height:12px;border-radius:6px;background:var(--line-strong);overflow:hidden}
+  .pfill{height:100%;width:0;border-radius:6px;background:var(--ink);
+    transition:width .4s ease}
+  .pfill.indet{width:35%;animation:indet 1.3s ease-in-out infinite}
+  @keyframes indet{0%{margin-left:-35%}100%{margin-left:100%}}
+  .plabel{margin-top:8px;font-size:13px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">prime editing · self-targeting libraries</div>
+    <h1>Self-Targeting pegRNA Toolkit</h1>
+    <p class="lede">Library design and sequence analysis in one automated interface.
+      The <b>first tab</b> designs a self-targeting pegRNA library for any gene
+      (mutations &rarr; PRIDICT2.0 &rarr; assembled library). The <b>second tab</b>
+      analyzes the screening results (plate map &rarr; pipeline &rarr;
+      control-corrected editing efficiencies).</p>
+    <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0">
+      Source code from Nicolas Mathis · interface and optimization by Yuxin Feng.</p>
+  </header>
+
+  <nav id="topnav" style="display:flex;gap:8px;margin:0 0 10px;border-bottom:1px solid var(--line-strong)">
+    <button class="tab active" id="nav-design" style="font-size:14px">Design library</button>
+    <button class="tab" id="nav-analysis" style="font-size:14px">Analysis (NGS)</button>
+  </nav>
+
+  <div id="view-design">
+
+  <!-- ===== engine sub-tabs: PRIDICT2.0 vs OptiPrime ===== -->
+  <div class="tabs" style="margin-bottom:18px">
+    <button class="tab active" data-engine="eng-pridict" style="font-size:14px">PRIDICT2.0</button>
+    <button class="tab" data-engine="eng-optiprime" style="font-size:14px">OptiPrime</button>
+  </div>
+
+  <!-- ================= PRIDICT2.0 engine pane ================= -->
+  <div id="eng-pridict">
+
+  <!-- LIBRARY OPTIONS + ONE-CLICK PIPELINE -->
+  <section class="stage" id="oneclick">
+    <div class="card" style="border:2px solid var(--ink)">
+      <h2 style="margin:0 0 6px;font-size:18px">One click, start to finish</h2>
+      <p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px">
+        Provide your input in <b>Step&nbsp;1</b> below (SnapGene files <i>or</i> a mutation
+        list) and your PRIDICT folder / env in <b>Step&nbsp;2</b>. Set the library
+        options here, then press this — it builds the input, runs PRIDICT, and
+        assembles the library with <b>no downloading or dropping files between
+        steps</b>. Each result stays individually downloadable below.</p>
+
+      <div class="row" style="margin-bottom:14px">
+        <div>
+          <label for="topn">Top N per mutation</label>
+          <input type="number" id="topn" value="10" min="1" step="1">
+          <p class="hint">Best pegRNAs kept <b>per mutation</b> in the final library.
+            Standard and bystander candidates compete together, ranked by K562 score.</p>
+        </div>
+        <div>
+          <label for="bystDir">Silent bystander variants</label>
+          <select id="bystDir" style="display:block;margin-top:2px;padding:8px;
+            border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);
+            color:var(--ink);font-size:13px;width:100%">
+            <option value="none" selected>None — main edit only</option>
+            <option value="revert">revert</option>
+            <option value="intro">intro</option>
+            <option value="both">revert+intro</option>
+          </select>
+          <p class="hint">Synonymous co-edits (coding substitutions only; promoter
+            sites left as standard). Applies to SnapGene input.</p>
+        </div>
+      </div>
+
+      <label style="margin-top:4px">Annotated SnapGene files</label>
+      <div class="drop" id="dropSnapAll" style="margin-bottom:6px">
+        <div class="ic">↑</div>
+        <div class="ph" id="phSnapAll">Drop .dna files (one or more), or click</div>
+        <input type="file" id="fileSnapAll" accept=".dna" multiple hidden>
+      </div>
+      <p class="hint" style="margin-top:-2px">Shares the same files as the
+        step-by-step Step&nbsp;1.</p>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:14px 0 8px">
+        <div style="flex:1;height:1px;background:var(--line)"></div>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em">or a mutation list</span>
+        <div style="flex:1;height:1px;background:var(--line)"></div>
+      </div>
+
+      <div class="row" style="gap:14px">
+        <div>
+          <label>Mutation list (.csv / .xlsx)</label>
+          <div class="drop" id="dropCsvAll" style="margin-bottom:6px">
+            <div class="ic">↑</div>
+            <div class="ph" id="phCsvAll">Drop .csv / .xlsx, or click</div>
+            <input type="file" id="fileCsvAll" accept=".csv,.xlsx" hidden>
+          </div>
+        </div>
+        <div>
+          <label for="geneAll">Gene <span style="font-weight:400;color:var(--ink-faint)">(if not in file)</span></label>
+          <input type="text" id="geneAll" placeholder="CSF1R  or  ENSG00000182578">
+          <p class="hint">Used when the file has no <code>gene</code> column.
+            Needs a <code>gDNA_mutation</code> column. Leave blank for multi-gene.</p>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:-2px">Use <b>either</b> SnapGene files
+        <b>or</b> a mutation list — whichever you fill in. SnapGene takes priority
+        if both are given.</p>
+
+      <button class="go" id="goAll">Build input → Run PRIDICT → Assemble library</button>
+      <div class="err" id="errAll"></div>
+      <div class="prog" id="progAll" style="display:none">
+        <div class="pbar"><div class="pfill" id="pfillAll"></div></div>
+        <div class="plabel" id="plabelAll"></div>
+      </div>
+      <div class="out" id="outAll">
+        <div class="stat" id="statAll"></div>
+        <div class="skip" id="noteAll" style="display:none"></div>
+        <a class="dl" href="/api/download_batch">↓ batch.csv</a>
+        <a class="dl" href="/api/download_pridict_summary" style="margin-left:8px">↓ summary.csv</a>
+        <a class="dl" href="/api/download_library" style="margin-left:8px">↓ library.csv</a>
+        <button class="go" id="goQCall" style="margin-left:10px;background:var(--ink)">Run quality check ↓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP-BY-STEP (manual alternative to one-click) -->
+  <section class="stage" style="padding-bottom:0">
+    <div style="border-top:2px dashed var(--line-strong);padding-top:18px">
+      <h2 style="margin:0;font-size:16px">Or run step by step</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin:6px 0 0">The same three
+        stages, run one at a time — use this to inspect or download each
+        intermediate, or to re-run a single stage. The library options above apply
+        here too.</p>
+    </div>
+  </section>
+
+  <!-- STAGE 1 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="num">1</span>
+      <h2>Prepare PRIDICT input</h2>
+      <span class="sub">mutations → batch.csv</span>
+    </div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" data-pane="pane-snap">SnapGene files<span class="badge">recommended</span></button>
+        <button class="tab" data-pane="pane-table">Paste / upload list</button>
+      </div>
+
+      <!-- SnapGene pane -->
+      <div class="pane active" id="pane-snap">
+        <label>Annotated SnapGene files</label>
+        <div class="drop" id="dropSnap">
+          <div class="ic">↑</div>
+          <div class="ph" id="phSnap">Drop .dna files (one or more), or click</div>
+          <input type="file" id="fileSnap" accept=".dna" multiple hidden>
+        </div>
+        <p class="hint">Reads mutations straight from your annotated features —
+          no Ensembl, no transcript alignment, promoter mutations supported.
+          The base change is taken from the feature <b>label</b> (e.g.
+          <code>-146C/T</code>, <code>P301L_C&gt;T</code>). Labels with only a
+          protein change (<code>L444P</code>) are reported for you to re-annotate
+          with the base change.</p>
+        <p class="hint" style="margin-top:14px">Silent <b>bystander</b> variants
+          (and Top-N per mutation) are set at the top under <b>Library options</b> —
+          they apply to this step-by-step run too.</p>
+        <button class="go" id="goSnap">Generate input sequences</button>
+        <div class="err" id="errSnap"></div>
+        <div class="out" id="outSnap">
+          <div class="stat" id="statSnap"></div>
+          <div class="skip" id="skipSnap" style="display:none"></div>
+          <a class="dl" href="/api/download_batch">↓ Download batch.csv</a>
+        </div>
+      </div>
+
+      <!-- Mutation table pane -->
+      <div class="pane" id="pane-table">
+
+        <div style="border:2px solid var(--ink);border-radius:8px;
+          padding:14px 16px;margin-bottom:16px">
+          <p style="font-weight:600;margin:0 0 6px">Look up variants (recommended)</p>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 10px">Paste names
+            exactly as papers write them — <code>GENE, PROTEIN_CHANGE</code>, one per
+            line. This queries ClinVar and shows every matching variant with its GRCh38
+            coordinate, rsID and transcript. <b>You choose</b> — nothing is auto-selected,
+            because one protein change can map to several distinct variants. Legacy
+            numbering is handled (GBA1 N370S and N409S both resolve).</p>
+          <textarea id="lookupBox" placeholder="MAPT, P301L&#10;GBA1, N370S&#10;ALDH1L2, I141N"
+            style="width:100%;min-height:80px;font-family:var(--mono);font-size:13px;
+            padding:12px;border:1px solid var(--line-strong);border-radius:8px;
+            background:var(--paper);color:var(--ink);resize:vertical"></textarea>
+          <button class="go" id="goLookup" style="margin-top:10px">Look up in ClinVar</button>
+          <p class="hint" style="margin-top:8px">Non-coding sites (TERT promoter) have no
+            protein change — give those as genomic coordinates below.</p>
+          <div class="err" id="errLookup"></div>
+          <div id="lookupResults" style="margin-top:12px"></div>
+        </div>
+
+        <div style="border:1px solid var(--line-strong);border-radius:8px;
+          padding:14px 16px;margin-bottom:14px;background:var(--paper)">
+          <p style="font-weight:600;margin:0 0 6px">Input formats — least ambiguous first</p>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 10px">A variant is
+            only meaningful relative to a transcript, and the same position numbers
+            differently across transcripts (the MAPT trap: 441 aa vs the 758 aa
+            canonical). Prefer inputs that carry their own coordinate system.</p>
+          <ul style="margin:0 0 10px;padding-left:18px;font-size:13px;line-height:1.7">
+            <li><b>Genomic (best)</b> — <code>chr1:g.155235252A&gt;G</code> —
+              transcript-free; also the only option for promoter / non-coding sites</li>
+            <li><b>rsID</b> — <code>rs76763715</code></li>
+            <li><b>Versioned transcript c.</b> — <code>NM_000157.4:c.1448T&gt;C</code>
+              or <code>ENST00000368373.8:c.1226A&gt;G</code></li>
+            <li><b>Gene + transcript + protein</b> — line
+              <code>GBA1, NM_000157.4, L483P</code></li>
+          </ul>
+          <p style="font-size:13px;color:#b35900;margin:0"><b>Avoid</b> — a bare protein
+            change or bare c. with no transcript (<code>GBA1, L483P</code> or
+            <code>c.1234A&gt;G</code>). These are transcript-dependent; the tool will
+            not guess canonical — it reports them as skipped and asks for a transcript.
+            To deliberately use canonical, put <code>canonical</code> in the transcript
+            field.</p>
+        </div>
+
+        <label for="pasteBox">Paste mutation list</label>
+        <textarea id="pasteBox" placeholder="One per line — least ambiguous first:&#10;chr1:g.155235252A>G&#10;rs76763715&#10;NM_000157.4:c.1448T>C&#10;GBA1, NM_000157.4, L483P"
+          style="width:100%;min-height:120px;font-family:var(--mono);font-size:13px;
+          padding:12px;border:1px solid var(--line-strong);border-radius:8px;
+          background:var(--paper);color:var(--ink);resize:vertical"></textarea>
+        <p class="hint">Each line is either a self-contained variant
+          (genomic / rsID / <code>NM_</code>|<code>ENST</code><code>:c.</code>) or
+          <code>GENE, TRANSCRIPT, MUTATION</code> (comma or space separated). Bare
+          protein / c. changes need a transcript — see above. Or upload a file with a
+          <code>gDNA_mutation</code> column (add a <code>transcript</code> column for
+          coding changes).</p>
+
+        <div class="row" style="margin-top:16px">
+          <div>
+            <label for="gene">Gene <span style="font-weight:400;color:var(--ink-faint)">(if not per-line)</span></label>
+            <input type="text" id="gene" placeholder="CSF1R  or  ENSG00000182578">
+            <p class="hint">Used when lines have no gene. Leave blank for multi-gene.</p>
+          </div>
+          <div>
+            <label>…or upload a file</label>
+            <div class="drop" id="drop1">
+              <div class="ic">↑</div>
+              <div class="ph" id="ph1">Drop .xlsx / .csv, or click</div>
+              <input type="file" id="file1" accept=".xlsx,.csv" hidden>
+            </div>
+            <p class="hint">Needs a <code>gDNA_mutation</code> column.</p>
+          </div>
+        </div>
+        <button class="go" id="go1">Generate input sequences</button>
+        <div class="err" id="err1"></div>
+        <div class="out" id="out1">
+          <div class="stat" id="stat1"></div>
+          <div class="skip" id="skip1" style="display:none"></div>
+          <a class="dl" id="dl1" href="/api/download_batch">↓ Download batch.csv</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 2 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="num">2</span>
+      <h2>Run PRIDICT2.0</h2>
+      <span class="sub">on your machine</span>
+    </div>
+    <div class="card">
+      <p style="font-size:14px;color:var(--ink-soft)">
+        Prediction is heavy and runs in its own conda environment, so it stays
+        on your machine. Put the downloaded <code>batch.csv</code> in the PRIDICT2
+        <code>input/</code> folder, then run:</p>
+      <div class="cmd">
+        <button class="cp" id="cp">copy</button>
+        <code id="cmd">python pridict2_pegRNA_design.py batch \
+  --input-fname batch.csv \
+  --cores 3 \
+  --summarize K562 \
+  --summarize_number <span id="cmdSnum">10</span></code>
+      </div>
+      <p class="hint" style="margin-top:14px">Takes ~1–2 h on a laptop CPU for a
+        few hundred sequences. When it finishes, grab the
+        <code>*_summary_K562_batch_summary.csv</code> from <code>predictions/</code>.</p>
+
+      <div style="margin-top:20px;padding-top:18px;border-top:1px dashed var(--line)">
+        <p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">
+          …or let the app run it for you (Layer 1 automation). This copies the
+          Step 1 <code>batch.csv</code> into PRIDICT's <code>input/</code>, runs it in
+          the <code>pridict2</code> env, and reads the summary back — Step 3 then
+          builds straight from it, no re-upload.</p>
+        <div class="row">
+          <div>
+            <label for="pridictHome">PRIDICT folder</label>
+            <input type="text" id="pridictHome" value="~/PRIDICT2">
+          </div>
+          <div>
+            <label for="condaEnv">conda env</label>
+            <input type="text" id="condaEnv" value="pridict2">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="runName">Input / run name</label>
+            <input type="text" id="runName" placeholder="e.g. GBA1_MAPT_run1 (blank = auto timestamp)">
+            <p class="hint">Names this run's input file (<code>input/&lt;name&gt;.csv</code>)
+              so its summary is identifiable. The previous run's output is moved
+              into <code>predictions/_archive/</code> automatically — no need to
+              empty the folder yourself.</p>
+          </div>
+          <div>
+            <label for="summarizeNumber">Candidates per target</label>
+            <input type="number" id="summarizeNumber" value="10" min="1" step="1">
+            <p class="hint">PRIDICT's <code>--summarize_number</code>: how many top
+              pegRNA candidates it keeps <b>per target</b> in the summary. This is the
+              PRIDICT-level pool; the final library then takes Top-N per mutation from
+              it (set in Library options).</p>
+          </div>
+        </div>
+        <button class="go" id="goPridict">Run PRIDICT</button>
+        <p class="hint" style="margin-top:8px"><b>Heads-up:</b> this blocks until
+          PRIDICT finishes. On a long run the browser may show a timeout while it
+          keeps going on disk — if that happens, the summary still appears in
+          <code>predictions/</code> and you can upload it in Step 3 as usual.</p>
+
+        <div style="margin-top:22px;padding:16px;border:2px solid var(--ink);border-radius:10px;background:#FBFAF6">
+          <p style="font-weight:600;margin:0 0 6px">Alternative engine — OptiPrime</p>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px">
+            Score the same Step 1 <code>batch.csv</code> with OptiPrime (David Liu
+            lab) instead of PRIDICT2.0. OptiPrime runs in its own
+            <code>optiprime</code> conda env. The rest of the workflow (Step 3
+            assembly, QC, download) is identical — Step 3 builds from whichever
+            engine you ran last.</p>
+          <div class="row">
+            <div>
+              <label for="optiprimeHome">OptiPrime folder</label>
+              <input type="text" id="optiprimeHome" value="~/optiprime-src">
+            </div>
+            <div>
+              <label for="optiprimeEnv">conda env</label>
+              <input type="text" id="optiprimeEnv" value="optiprime">
+            </div>
+          </div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--accent-line)">
+            <label style="display:block;margin-bottom:2px">Experimental conditions (OptiPrime scoring context)</label>
+            <p class="hint" style="margin:8px 0">These describe YOUR experiment. OptiPrime scores
+              the same pegRNA differently depending on them, so a mismatch here shows up as a
+              wrong efficiency, not as an error. <b>PEmax is the Cas9 setting</b> — leave PE system
+              on PE2 unless you co-express MLH1dn (that is PE4).</p>
+            <div class="row">
+              <div>
+                <label for="opCell">Cell type</label>
+                <select id="opCell">
+                  <option>HEK293T</option><option>HeLa</option><option>A549</option>
+                  <option>HAP1</option><option selected>K562</option><option>U2OS</option>
+                  <option>DLD1</option><option>MDA-MB-231</option><option>NIH3T3</option>
+                </select>
+              </div>
+              <div>
+                <label for="opPeType">PE system</label>
+                <select id="opPeType">
+                  <option selected>PE2</option><option>PE4</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="opCas9">Cas9 / editor</label>
+                <select id="opCas9">
+                  <option>PE2-Cas9</option><option selected>PEmax-Cas9</option>
+                  <option>PE6e-Cas9</option><option>PE6f-Cas9</option><option>PE6g-Cas9</option>
+                </select>
+              </div>
+              <div>
+                <label for="opRt">RT variant</label>
+                <select id="opRt">
+                  <option selected>PE2-RT</option><option>PE6a-RT</option><option>PE6b-RT</option>
+                  <option>PE6c-RT</option><option>PE6d-RT</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="opScaffold">Scaffold</label>
+                <select id="opScaffold">
+                  <option>SpCas9_OG</option><option selected>OG_F+E</option>
+                  <option>BlpI_F+E</option><option>GC_F+E</option>
+                </select>
+              </div>
+              <div>
+                <label for="opMotif">3' motif</label>
+                <select id="opMotif">
+                  <option selected>tevoPreQ1</option><option>none</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="opPam">Cas9 PAM specificity</label>
+                <select id="opPam">
+                  <option selected>SpNGG</option><option>SpNG</option><option>SpNRCH</option>
+                  <option>SpNRTH</option><option>SpNRRH</option><option>SpG</option>
+                  <option>SpRY</option><option>SpVRQR</option>
+                </select>
+              </div>
+              <div>
+                <label for="opTime">Time after delivery (days)</label>
+                <input type="number" id="opTime" value="4" min="1" max="14" step="0.5">
+              </div>
+            </div>
+          </div>
+          <button class="go" id="goOptiprime" style="background:var(--ink)">Run OptiPrime</button>
+          <p class="hint" style="margin-top:8px">Also blocking. OptiPrime searches
+            protospacers for each edit and scores their PBS/RTT designs
+            independently of PRIDICT.</p>
+          <div class="err" id="errOptiprime"></div>
+          <div class="out" id="outOptiprime" style="display:none">
+            <div class="stat" id="statOptiprime"></div>
+          </div>
+        </div>
+
+        <div class="err" id="errPridict"></div>
+        <div class="out" id="outPridict">
+          <div class="stat" id="statPridict"></div>
+          <a class="dl" id="dlPridict" href="/api/download_pridict_summary">↓ Download summary.csv</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 3 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="num">3</span>
+      <h2>Assemble library</h2>
+      <span class="sub">summary → library.csv</span>
+    </div>
+    <div class="card">
+      <label>PRIDICT summary</label>
+      <div class="drop" id="drop3" style="margin-bottom:14px">
+        <div class="ic">↑</div>
+        <div class="ph" id="ph3">Drop summary .csv, or click</div>
+        <input type="file" id="file3" accept=".csv" hidden>
+      </div>
+      <p class="hint" style="margin-top:-6px">Top-N per mutation is set at the top
+        (Library options). It applies to both one-click and this step.</p>
+      <button class="go" id="go3">Assemble self-targeting library</button>
+
+      <div class="err" id="err3"></div>
+
+      <div class="out" id="out3">
+        <div class="stat" id="stat3"></div>
+        <div class="skip" id="skip3" style="display:none"></div>
+        <a class="dl" id="dl3" href="/api/download_library">↓ Download library.csv</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 4 · QUALITY CHECK (always visible) -->
+  <section class="stage" id="qcstage">
+    <div class="stage-head">
+      <span class="num">4</span>
+      <h2>Quality check</h2>
+      <span class="sub">verify every construct</span>
+    </div>
+    <div class="card">
+      <p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">
+        Runs on the library you just built — from the <b>one-click</b> run
+        <i>or</i> from <b>Step&nbsp;3</b>. Every construct is checked against the
+        rules that make a self-targeting library work. <b>Nothing is deleted</b>;
+        you decide what to do with anything flagged.</p>
+
+      <h4 style="margin:0 0 8px">QC criteria — what each check means</h4>
+      <ul id="qcCriteria" style="margin:0 0 16px;padding-left:18px;font-size:13px;
+        color:var(--ink-soft);line-height:1.7"></ul>
+
+      <button class="go" id="goQC">Run quality check</button>
+      <div class="err" id="errQC"></div>
+
+      <div class="out" id="outQC">
+        <div class="stat" id="statQC"></div>
+        <div id="listQC" style="margin-top:6px"></div>
+        <a class="dl" id="dlQC" href="/api/download_qc">↓ Download passing library (.csv)</a>
+        <a class="dl" id="dlQCdrop" href="/api/download_qc_dropped" style="margin-left:10px">↓ Download dropped constructs + reasons (.csv)</a>
+      </div>
+    </div>
+  </section>
+
+  <p class="note">Default construct elements (primers, BsmBI site, tevopreQ1,
+    barcode length, 300&nbsp;bp Twist limit) reproduce the Schwank-lab CSF1R
+    design. Different vector or cloning system? Those live in
+    <code>engine.py → DEFAULTS</code> and are meant to be overridden.</p>
+
+  </div><!-- /eng-pridict -->
+
+  <!-- ================= OptiPrime engine pane (placeholder) ================= -->
+  <div id="eng-optiprime" style="display:none">
+    <section class="stage">
+      <div class="card" style="border:2px solid var(--ink)">
+        <h2 style="margin:0 0 6px;font-size:18px">OptiPrime — one click, start to finish</h2>
+        <p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px">
+          Independent of PRIDICT2.0. Provide mutations, set library options and
+          your OptiPrime folder / env, then press run — it builds the input,
+          searches protospacers, scores their PBS/RTT with OptiPrime, and
+          assembles the library. Nothing here is shared with the PRIDICT tab.</p>
+
+        <div class="row">
+          <div>
+            <label for="topn_op">Top N per mutation</label>
+            <input type="number" id="topn_op" value="10" min="1" step="1">
+            <p class="hint">Best pegRNAs kept <b>per mutation</b> in the final
+              library, ranked by OptiPrime score.</p>
+          </div>
+          <div>
+            <label for="bystDir_op">Silent bystander variants</label>
+            <select id="bystDir_op">
+              <option value="none">None — main edit only</option>
+              <option value="both">Introduce &amp; revert</option>
+              <option value="intro">Introduce only</option>
+              <option value="revert">Revert only</option>
+            </select>
+            <p class="hint">Synonymous co-edits (coding substitutions only).
+              Applies to SnapGene input.</p>
+          </div>
+        </div>
+
+        <label style="margin-top:8px">Annotated SnapGene files</label>
+        <div class="drop" id="dropSnapAll_op">
+          <div class="ic">&uarr;</div>
+          <div class="ph" id="phSnapAll_op">Drop .dna files (one or more), or click</div>
+          <input type="file" id="fileSnapAll_op" accept=".dna" multiple hidden>
+        </div>
+
+        <div class="orbar"><span>OR A MUTATION LIST</span></div>
+
+        <div style="margin-top:4px">
+          <label>Mutation list (.csv / .xlsx)</label>
+          <div class="drop" id="dropCsvAll_op" style="margin-bottom:6px">
+            <div class="ic">&uarr;</div>
+            <div class="ph" id="phCsvAll_op">Drop .csv / .xlsx, or click</div>
+            <input type="file" id="fileCsvAll_op" accept=".csv,.xlsx" hidden>
+          </div>
+          <p class="hint">Needs a <code>gDNA_mutation</code> column and a
+            <code>gene</code> column (multi-gene). Every row must name its gene.</p>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div>
+            <label for="optiprimeHomeAll">OptiPrime folder</label>
+            <input type="text" id="optiprimeHomeAll" value="~/optiprime-src">
+          </div>
+          <div>
+            <label for="optiprimeEnvAll">conda env</label>
+            <input type="text" id="optiprimeEnvAll" value="optiprime">
+          </div>
+        </div>
+
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--accent-line)">
+            <label style="display:block;margin-bottom:2px">Experimental conditions (OptiPrime scoring context)</label>
+            <p class="hint" style="margin:8px 0">These describe YOUR experiment. OptiPrime scores
+              the same pegRNA differently depending on them, so a mismatch here shows up as a
+              wrong efficiency, not as an error. <b>PEmax is the Cas9 setting</b> — leave PE system
+              on PE2 unless you co-express MLH1dn (that is PE4).</p>
+            <div class="row">
+              <div>
+                <label for="opCellAll">Cell type</label>
+                <select id="opCellAll">
+                  <option>HEK293T</option><option>HeLa</option><option>A549</option>
+                  <option>HAP1</option><option selected>K562</option><option>U2OS</option>
+                  <option>DLD1</option><option>MDA-MB-231</option><option>NIH3T3</option>
+                </select>
+              </div>
+              <div>
+                <label for="opPeTypeAll">PE system</label>
+                <select id="opPeTypeAll">
+                  <option selected>PE2</option><option>PE4</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="opCas9All">Cas9 / editor</label>
+                <select id="opCas9All">
+                  <option>PE2-Cas9</option><option selected>PEmax-Cas9</option>
+                  <option>PE6e-Cas9</option><option>PE6f-Cas9</option><option>PE6g-Cas9</option>
+                </select>
+              </div>
+              <div>
+                <label for="opRtAll">RT variant</label>
+                <select id="opRtAll">
+                  <option selected>PE2-RT</option><option>PE6a-RT</option><option>PE6b-RT</option>
+                  <option>PE6c-RT</option><option>PE6d-RT</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="opScaffoldAll">Scaffold</label>
+                <select id="opScaffoldAll">
+                  <option>SpCas9_OG</option><option selected>OG_F+E</option>
+                  <option>BlpI_F+E</option><option>GC_F+E</option>
+                </select>
+              </div>
+              <div>
+                <label for="opMotifAll">3' motif</label>
+                <select id="opMotifAll">
+                  <option selected>tevoPreQ1</option><option>none</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="opPamAll">Cas9 PAM specificity</label>
+                <select id="opPamAll">
+                  <option selected>SpNGG</option><option>SpNG</option><option>SpNRCH</option>
+                  <option>SpNRTH</option><option>SpNRRH</option><option>SpG</option>
+                  <option>SpRY</option><option>SpVRQR</option>
+                </select>
+              </div>
+              <div>
+                <label for="opTimeAll">Time after delivery (days)</label>
+                <input type="number" id="opTimeAll" value="4" min="1" max="14" step="0.5">
+              </div>
+            </div>
+          </div>
+        <button class="go" id="goAll_op" style="margin-top:14px">Build input → Run OptiPrime → Assemble library</button>
+        <p class="hint" style="margin-top:8px"><b>Heads-up:</b> blocking; OptiPrime
+          searches protospacers and scores each design. Keep this tab open.</p>
+
+        <div class="err" id="errAll_op"></div>
+        <div class="prog" id="progAll_op" style="display:none">
+          <div class="pbar"><div class="pfill" id="pfillAll_op"></div></div>
+          <div class="plabel" id="plabelAll_op"></div>
+        </div>
+        <div class="out" id="outAll_op" style="display:none">
+          <div class="stat" id="statAll_op"></div>
+          <a class="dl" id="dlBatch_op" href="/api/download_batch_op">↓ batch.csv</a>
+          <a class="dl" id="dlSummary_op" href="/api/download_optiprime_summary" style="margin-left:8px">↓ OptiPrime summary</a>
+          <a class="dl" id="dlLib_op" href="/api/download_library_op" style="margin-left:8px">↓ library</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- QC for OptiPrime library -->
+    <section class="stage">
+      <div class="card">
+        <h2 style="margin:0 0 6px;font-size:18px">Quality check (OptiPrime library)</h2>
+        <p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">
+          Runs the same QC as the PRIDICT tab on the OptiPrime library above.
+          Failing constructs are dropped; download the passing library and a
+          separate list of dropped constructs with reasons.</p>
+        <button class="go" id="goQC_op">Run quality check</button>
+        <div class="err" id="errQC_op"></div>
+        <div class="out" id="outQC_op" style="display:none">
+          <div class="stat" id="statQC_op"></div>
+          <a class="dl" id="dlQC_op" href="/api/download_qc_op">↓ Download passing library (.csv)</a>
+          <a class="dl" id="dlQCdrop_op" href="/api/download_qc_dropped_op" style="margin-left:10px">↓ Download dropped constructs + reasons (.csv)</a>
+        </div>
+      </div>
+    </section>
+  </div><!-- /eng-optiprime -->
+
+  </div><!-- /view-design -->
+
+  <div id="view-analysis" style="display:none">
+
+    <!-- ===== Card A: generate sample sheets only ===== -->
+    <section class="stage" style="padding-bottom:0">
+      <div class="card">
+        <h2 style="margin:0 0 6px;font-size:18px">1 &middot; Generate sample sheets</h2>
+        <p style="font-size:14px;color:var(--ink-soft);margin-bottom:16px">
+          Generates the two sample sheets the analysis pipeline needs, straight from your plate map:<br>
+          &bull; <b>the combine sheet</b> &mdash; lists which raw wells get merged into each sample.<br>
+          &bull; <b><code>config/samples.csv</code></b> &mdash; tells the pipeline which samples to analyze after the merging step.<br>
+          <span style="font-size:12.5px">These two CSVs are all you need to run the pipeline manually, instead of the
+          "Run full pipeline" card below. No FASTQs are merged and nothing is run yet &mdash;
+          this just generates the pipeline's input files.</span></p>
+
+        <label for="a_file">Plate map (.xlsx) &mdash; columns: editor, replicate, r1_file, r2_file</label>
+        <div class="drop" id="a_drop" style="margin-bottom:12px">
+          <div class="ic">&uarr;</div>
+          <div class="ph" id="a_ph">Drop plate map .xlsx, or click</div>
+          <input type="file" id="a_file" accept=".xlsx" hidden>
+        </div>
+
+        <div class="row" style="margin-bottom:12px">
+          <div><label for="a_pipeline">Pipeline directory (where CSVs are written)</label>
+            <input type="text" id="a_pipeline" value="/Users/yuxin/Documents/UCB/ATG/self_targeting_analysis/ALSP_library_sequencing_data/iPSC_library/iPSC_analysis_YF" placeholder="/Users/you/.../iPSC_analysis_YF"></div>
+          <div><label for="a_lib">Library name</label>
+            <input type="text" id="a_lib" value="ALSP-iPSCpilot" placeholder="ALSP-iPSCpilot"></div>
+        </div>
+        <div class="row" style="margin-bottom:12px">
+          <div><label for="a_raw">Raw per-well FASTQ folder name <span style="color:var(--ink-soft)">(optional)</span></label>
+            <input type="text" id="a_raw" value="fastqs_raw" placeholder="fastqs_raw"></div>
+          <div></div>
+        </div>
+
+        <button class="go" id="a_go" style="background:var(--ink)">Generate sample sheets</button>
+        <div class="err" id="a_err"></div>
+        <div class="out" id="a_out" style="display:block"><div id="a_stat" style="display:block"></div></div>
+      </div>
+    </section>
+
+    <!-- ===== Card B: full one-click run ===== -->
+    <section class="stage">
+      <div class="card" style="border:2px solid var(--ink)">
+        <h2 style="margin:0 0 6px;font-size:18px">2 &middot; Run full pipeline</h2>
+        <p style="font-size:14px;color:var(--ink-soft);margin-bottom:16px">
+          The whole thing end-to-end: merge per-well FASTQs &rarr; write
+          <code>config/samples.csv</code> &rarr; run Snakemake &rarr; aggregate into a
+          control-corrected <code>_df.xlsx</code>. Takes hours; keep this tab open.</p>
+
+        <label for="b_file">Plate map (.xlsx)</label>
+        <div class="drop" id="b_drop" style="margin-bottom:12px">
+          <div class="ic">&uarr;</div>
+          <div class="ph" id="b_ph">Drop plate map .xlsx, or click</div>
+          <input type="file" id="b_file" accept=".xlsx" hidden>
+        </div>
+
+        <div class="row" style="margin-bottom:12px">
+          <div><label for="b_pipeline">Pipeline directory (Snakefile, config/, aggregate.py)</label>
+            <input type="text" id="b_pipeline" value="/Users/yuxin/Documents/UCB/ATG/self_targeting_analysis/ALSP_library_sequencing_data/iPSC_library/iPSC_analysis_YF" placeholder="/Users/you/.../iPSC_analysis_YF"></div>
+          <div><label for="b_raw">Raw per-well FASTQ folder</label>
+            <input type="text" id="b_raw" value="/Users/yuxin/Documents/UCB/ATG/self_targeting_analysis/ALSP_library_sequencing_data/iPSC_library/iPSC_analysis_YF/fastqs_raw" placeholder="/Users/you/.../fastqs_raw"></div>
+        </div>
+        <div class="row" style="margin-bottom:12px">
+          <div><label for="b_lib">Library name</label>
+            <input type="text" id="b_lib" value="ALSP-iPSCpilot" placeholder="ALSP-iPSCpilot"></div>
+          <div><label for="b_date">Date prefix (YYYYMMDD)</label>
+            <input type="text" id="b_date" value="20251030" placeholder="20251030"></div>
+        </div>
+        <div class="row" style="margin-bottom:12px">
+          <div><label for="b_template">Library design CSV (relative to pipeline dir)</label>
+            <input type="text" id="b_template" value="20241009_CSF1R_library_intro_revert_silent_bystander_1000lib.csv" placeholder="20241009_CSF1R_..._1000lib.csv"></div>
+          <div><label for="b_cores">Cores</label>
+            <input type="number" id="b_cores" value="6" min="1" step="1"></div>
+        </div>
+
+        <details id="b_seqparams" style="margin-bottom:10px;border:1px solid var(--line);border-radius:8px;padding:0 12px">
+          <summary style="cursor:pointer;padding:10px 0;font-size:13px;font-weight:600">Sequence &amp; library parameters <span style="font-weight:400;color:var(--ink-soft)">— same design, usually unchanged</span></summary>
+          <div style="padding:0 0 12px">
+            <div class="row" style="margin-bottom:10px">
+              <div><label>library_size</label><input type="text" data-cfg="library_size"></div>
+              <div><label>min_coverage</label><input type="text" data-cfg="min_coverage"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>target_adapter</label><input type="text" data-cfg="target_adapter"></div>
+              <div><label>spacer_adapter</label><input type="text" data-cfg="spacer_adapter"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>spacer_adapter_end</label><input type="text" data-cfg="spacer_adapter_end"></div>
+              <div><label>rtt_adapter</label><input type="text" data-cfg="rtt_adapter"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>spacer_length</label><input type="text" data-cfg="spacer_length"></div>
+              <div><label>barcode_length</label><input type="text" data-cfg="barcode_length"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>target_start_to_nick_distance</label><input type="text" data-cfg="target_start_to_nick_distance"></div>
+              <div><label>nick_pos_in_wide_initial_target</label><input type="text" data-cfg="nick_pos_in_wide_initial_target"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>read_length</label><input type="text" data-cfg="read_length"></div>
+              <div><label>rtt_lookup_length</label><input type="text" data-cfg="rtt_lookup_length"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>basesbeforenick</label><input type="text" data-cfg="basesbeforenick"></div>
+              <div><label>baseafterflap</label><input type="text" data-cfg="baseafterflap"></div>
+            </div>
+            <div><label>required_columns</label>
+              <textarea data-cfg="required_columns" rows="2" style="width:100%;font-family:var(--mono,monospace);font-size:11px"></textarea></div>
+          </div>
+        </details>
+
+        <details id="b_advparams" style="margin-bottom:12px;border:1px solid var(--line);border-radius:8px;padding:0 12px">
+          <summary style="cursor:pointer;padding:10px 0;font-size:13px;font-weight:600">Advanced &amp; paths <span style="font-weight:400;color:var(--ink-soft)">— rarely changed</span></summary>
+          <div style="padding:0 0 12px">
+            <div class="row" style="margin-bottom:10px">
+              <div><label>cutadapt_threads</label><input type="text" data-cfg="cutadapt_threads"></div>
+              <div><label>min_quality</label><input type="text" data-cfg="min_quality"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>read_progress_interval</label><input type="text" data-cfg="read_progress_interval"></div>
+              <div><label>fastq_folder</label><input type="text" data-cfg="fastq_folder"></div>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div><label>output_folder</label><input type="text" data-cfg="output_folder"></div>
+              <div><label>analysis_folder</label><input type="text" data-cfg="analysis_folder"></div>
+            </div>
+            <div class="row" style="margin-bottom:0">
+              <div><label>log_folder</label><input type="text" data-cfg="log_folder"></div>
+              <div></div>
+            </div>
+          </div>
+        </details>
+        <div class="err" id="b_cfgnote" style="display:none;background:var(--card,#eef3ee);color:var(--ink-soft);font-size:12px;padding:8px 10px;border-radius:6px;margin-bottom:10px"></div>
+
+        <button class="go" id="b_go">Merge &rarr; Run pipeline &rarr; Aggregate</button>
+        <div class="err" id="b_err"></div>
+        <div class="prog" id="b_prog" style="display:none">
+          <div class="pbar"><div class="pfill" id="b_pfill"></div></div>
+          <div class="plabel" id="b_plabel"></div>
+        </div>
+        <div class="out" id="b_out">
+          <div class="stat" id="b_stat"></div>
+          <a class="dl" id="b_dl" href="#" style="display:none">&darr; download _df.xlsx</a>
+        </div>
+      </div>
+    </section>
+  </div><!-- /view-analysis -->
+
+</div>
+
+<script>
+function bind(dropId, fileId, phId){
+  const drop=document.getElementById(dropId), file=document.getElementById(fileId),
+        ph=document.getElementById(phId);
+  drop.onclick=()=>file.click();
+  file.onchange=()=>{ if(file.files[0]){ drop.classList.add('has');
+    ph.textContent=file.files[0].name; ph.previousElementSibling.textContent='OK'; } };
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add('has')};
+  drop.ondragleave=()=>{ if(!file.files[0])drop.classList.remove('has') };
+  drop.ondrop=e=>{e.preventDefault(); file.files=e.dataTransfer.files; file.onchange();};
+}
+bind('drop1','file1','ph1'); bind('drop3','file3','ph3'); bind('dropCsvAll','fileCsvAll','phCsvAll');
+
+// tab switching
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.pane).classList.add('active');
+  };
+});
+
+// SnapGene multi-file binding — the step-by-step dropzone and the one-click
+// dropzone share the SAME files: picking/dropping in either mirrors to both.
+function _setFiles(input, fileList){
+  try{ const dt=new DataTransfer(); for(const f of fileList) dt.items.add(f);
+       input.files=dt.files; }catch(e){ /* older browsers: leave as-is */ }
+}
+(function(){
+  const A={drop:'dropSnap', file:'fileSnap', ph:'phSnap'};
+  const B={drop:'dropSnapAll', file:'fileSnapAll', ph:'phSnapAll'};
+  const inA=document.getElementById(A.file), inB=document.getElementById(B.file);
+  function paint(files){
+    for(const g of [A,B]){
+      const drop=document.getElementById(g.drop), ph=document.getElementById(g.ph);
+      if(!drop) continue;
+      if(files && files.length){ drop.classList.add('has');
+        ph.textContent=files.length+' file(s): '+Array.from(files).map(f=>f.name).join(', ');
+        ph.previousElementSibling.textContent='OK';
+      } else { drop.classList.remove('has'); }
+    }
+  }
+  function share(files){ if(inA) _setFiles(inA,files); if(inB) _setFiles(inB,files); paint(files); }
+  for(const g of [A,B]){
+    const drop=document.getElementById(g.drop), file=document.getElementById(g.file);
+    if(!drop) continue;
+    drop.onclick=()=>file.click();
+    file.onchange=()=>share(file.files);
+    drop.ondragover=e=>{e.preventDefault();drop.classList.add('has')};
+    drop.ondragleave=()=>{ if(!(inA&&inA.files.length))drop.classList.remove('has') };
+    drop.ondrop=e=>{e.preventDefault(); share(e.dataTransfer.files);};
+  }
+})();
+
+document.getElementById('goSnap').onclick=async function(){
+  const files=document.getElementById('fileSnap').files;
+  document.getElementById('errSnap').classList.remove('show');
+  document.getElementById('outSnap').classList.remove('show');
+  if(!files.length) return showErr('errSnap','Upload one or more .dna files.');
+  this.disabled=true; this.innerHTML='<span class="spin"></span>Reading SnapGene annotations…';
+  const fd=new FormData();
+  for(const f of files) fd.append('files',f);
+  {const _bd=document.getElementById('bystDir').value; if(_bd&&_bd!=='none') fd.append('bystander',_bd);}
+  try{
+    const r=await fetch('/api/build_input_snapgene',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok){ showErr('errSnap',d.error||'Failed.',d.trace); return; }
+    const rp=d.report;
+    let stats=cell(rp.n_files,'files')+cell(rp.n_sequences_generated,'standard seqs')+
+      cell(rp.n_sequences_generated/2,'mutations');
+    if(rp.bystander){ stats+=cell(rp.bystander.n_variants,'bystander seqs'); }
+    else { stats+=cell(rp.n_skipped,'skipped'); }
+    document.getElementById('statSnap').innerHTML=stats;
+    const sk=document.getElementById('skipSnap');
+    let html='';
+    const allSkipped=(rp.skipped||[]).concat(rp.bystander?rp.bystander.skipped:[]);
+    if(allSkipped.length){
+      html='<h4>Notes</h4><ul>'+
+        allSkipped.map(s=>'<li><b>'+esc(s[0])+'</b> — '+esc(s[1])+'</li>').join('')+'</ul>';
+    }
+    if(html){ sk.style.display='block'; sk.innerHTML=html; } else sk.style.display='none';
+    document.getElementById('outSnap').classList.add('show');
+  }catch(e){ showErr('errSnap','Network or server error: '+e.message); }
+  finally{ this.disabled=false; this.textContent='Generate input sequences'; }
+};
+
+(function(){var sn=document.getElementById('summarizeNumber'),cs=document.getElementById('cmdSnum');if(sn&&cs)sn.addEventListener('input',function(){cs.textContent=sn.value.trim()||'10';});})();
+document.getElementById('cp').onclick=()=>{
+  navigator.clipboard.writeText(document.getElementById('cmd').innerText);
+  document.getElementById('cp').textContent='copied';
+  setTimeout(()=>document.getElementById('cp').textContent='copy',1200);
+};
+
+document.getElementById('goPridict').onclick=async function(){
+  document.getElementById('errPridict').classList.remove('show');
+  document.getElementById('outPridict').classList.remove('show');
+  const fd=new FormData();
+  fd.append('pridict_home',document.getElementById('pridictHome').value.trim());
+  fd.append('conda_env',document.getElementById('condaEnv').value.trim());
+  fd.append('run_name',document.getElementById('runName').value.trim());
+  fd.append('summarize_number',document.getElementById('summarizeNumber').value.trim()||'10');
+  this.disabled=true; this.textContent='Running PRIDICT… (may take a while — keep this tab open)';
+  try{
+    const r=await fetch('/api/run_pridict',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok){ showErr('errPridict',d.error||'Failed.',d.trace); return; }
+    let archived = d.archived_to ? ('<div class="l">previous output archived to '+esc(d.archived_to)+'</div>') : '';
+    document.getElementById('statPridict').innerHTML=
+      '<div class="v">'+d.n_rows+'</div><div class="l">rows — run <b>'+esc(d.run_name)+
+      '</b>. Step 3 will use it automatically.</div>'+archived;
+    document.getElementById('outPridict').classList.add('show');
+  }catch(e){ showErr('errPridict','Network or server error (PRIDICT may still be '+
+      'running on disk — check predictions/): '+e.message); }
+  finally{ this.disabled=false; this.textContent='Run PRIDICT'; }
+};
+
+document.getElementById('goOptiprime').onclick=async function(){
+  document.getElementById('errOptiprime').classList.remove('show');
+  document.getElementById('outOptiprime').style.display='none';
+  const fd=new FormData();
+  fd.append('optiprime_home',document.getElementById('optiprimeHome').value.trim());
+  fd.append('optiprime_env',document.getElementById('optiprimeEnv').value.trim());
+  fd.append('optiprime_settings',JSON.stringify(opSettings('')));
+  this.disabled=true; this.textContent='Running OptiPrime… (keep this tab open)';
+  try{
+    const r=await fetch('/api/run_optiprime',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok){ showErr('errOptiprime',d.error||'Failed.',d.trace); return; }
+    document.getElementById('statOptiprime').innerHTML=
+      '<div class="v">'+d.n_scored_pegRNAs+'</div><div class="l">pegRNAs scored by OptiPrime across '+
+      d.n_runs+' protospacer runs. Step 3 will use these automatically.</div>'+opWarnBanner(d);
+    document.getElementById('outOptiprime').style.display='block';
+  }catch(e){ showErr('errOptiprime','Network or server error: '+e.message); }
+  finally{ this.disabled=false; this.textContent='Run OptiPrime'; }
+};
+
+function renderAllResult(d){
+  const s1=d.stage1, pr=d.pridict, s3=d.stage3;
+  let stats='';
+  if(s1 && s1.n_sequences_generated!=null) stats+=cell(s1.n_sequences_generated,'input seqs');
+  stats+=cell(pr.n_rows,'PRIDICT rows')+cell(s3.n_constructs_built,'constructs')+
+    cell(s3.n_mutations,'mutations')+cell(s3.all_300bp?'yes':'no','all 300bp');
+  document.getElementById('statAll').innerHTML=stats;
+  let notes=[];
+  if(pr.archived_to) notes.push('Previous PRIDICT output archived to '+esc(pr.archived_to));
+  if(s3.notes && s3.notes.length) notes=notes.concat(s3.notes.map(esc));
+  const nb=document.getElementById('noteAll');
+  if(notes.length){ nb.style.display='block';
+    nb.innerHTML='<h4>Notes</h4><ul>'+notes.map(n=>'<li>'+n+'</li>').join('')+'</ul>'; }
+  else nb.style.display='none';
+  document.getElementById('outAll').classList.add('show');
+}
+
+function setProg(pct, label, indet){
+  document.getElementById('progAll').style.display='block';
+  const f=document.getElementById('pfillAll');
+  if(indet){ f.classList.add('indet'); f.style.width=''; }
+  else { f.classList.remove('indet'); f.style.width=(pct||0)+'%'; }
+  document.getElementById('plabelAll').textContent=label||'';
+}
+
+document.getElementById('goAll').onclick=async function(){
+  document.getElementById('errAll').classList.remove('show');
+  document.getElementById('outAll').classList.remove('show');
+  const fd=new FormData();
+
+  // --- Stage 1 inputs ---
+  // SnapGene files are shared between the one-click and step-by-step dropzones.
+  const dna=document.getElementById('fileSnapAll').files.length
+        ? document.getElementById('fileSnapAll').files
+        : document.getElementById('fileSnap').files;
+  const snapActive=document.getElementById('pane-snap') &&
+        document.getElementById('pane-snap').classList.contains('active');
+  const csvAll=document.getElementById('fileCsvAll').files[0];
+  const geneAll=document.getElementById('geneAll').value.trim();
+  if(dna.length){
+    // SnapGene takes priority
+    for(const f of dna) fd.append('files',f);
+    {const _bd=document.getElementById('bystDir').value; if(_bd&&_bd!=='none') fd.append('bystander',_bd);}
+  } else if(csvAll){
+    // one-click's own mutation-list upload
+    fd.append('file',csvAll);
+    if(geneAll) fd.append('gene',geneAll);
+  } else {
+    // fall back to whatever is in step-by-step (paste box or its file)
+    const pasted=document.getElementById('pasteBox').value.trim();
+    const file=document.getElementById('file1').files[0];
+    const gene=document.getElementById('gene').value.trim();
+    if(!pasted && !file) return showErr('errAll','Step 1: upload .dna files or a mutation list (.csv/.xlsx) above.');
+    if(gene) fd.append('gene',gene);
+    if(pasted) fd.append('pasted',pasted); else fd.append('file',file);
+  }
+
+  // --- Stage 2 + 3 params ---
+  fd.append('pridict_home',document.getElementById('pridictHome').value.trim());
+  fd.append('conda_env',document.getElementById('condaEnv').value.trim());
+  fd.append('run_name',document.getElementById('runName').value.trim());
+  fd.append('summarize_number',document.getElementById('summarizeNumber').value.trim()||'10');
+  fd.append('top_n',document.getElementById('topn').value.trim()||'10');
+
+  this.disabled=true;
+  this.innerHTML='<span class="spin"></span>Running…';
+  setProg(0,'Starting…',true);
+  try{
+    const r=await fetch('/api/run_all_async',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok || !d.job_id){ showErr('errAll',d.error||'Failed to start.',d.trace);
+      setProg(0,'',false); document.getElementById('progAll').style.display='none';
+      this.disabled=false; this.innerHTML='Build input → Run PRIDICT → Assemble library'; return; }
+    pollAll(d.job_id, this);
+  }catch(e){
+    showErr('errAll','Could not start the run: '+e.message);
+    document.getElementById('progAll').style.display='none';
+    this.disabled=false; this.innerHTML='Build input → Run PRIDICT → Assemble library';
+  }
+};
+
+const STAGE_LABEL={input:'Building PRIDICT input', pridict:'Running PRIDICT',
+  assemble:'Assembling library', done:'Done', error:'Error'};
+
+function pollAll(jobId, btn){
+  const tick=async ()=>{
+    let p;
+    try{ p=await (await fetch('/api/progress/'+jobId)).json(); }
+    catch(e){ setTimeout(tick,3000); return; }  // transient network blip — keep polling
+    if(p.error && p.status!=='error'){ /* unknown job */ }
+    const label=STAGE_LABEL[p.stage]||p.stage||'';
+    if(p.status==='running'){
+      if(p.stage==='pridict' && p.total){
+        setProg(p.percent, 'Running PRIDICT — '+p.done+' / '+p.total+' sequences ('+p.percent+'%)', false);
+      } else {
+        setProg(0, (p.message||label)+'…', true);
+      }
+      setTimeout(tick, 2500);
+    } else if(p.status==='done'){
+      setProg(100,'Done.',false);
+      renderAllResult(p.result);
+      btn.disabled=false; btn.innerHTML='Build input → Run PRIDICT → Assemble library';
+      setTimeout(()=>{document.getElementById('progAll').style.display='none';},1500);
+    } else if(p.status==='error'){
+      document.getElementById('progAll').style.display='none';
+      showErr('errAll', p.error||'Run failed.', p.trace);
+      btn.disabled=false; btn.innerHTML='Build input → Run PRIDICT → Assemble library';
+    } else {
+      setTimeout(tick, 2500);
+    }
+  };
+  tick();
+}
+
+function showErr(id,msg,trace){
+  const e=document.getElementById(id); e.classList.add('show');
+  e.innerHTML=msg+(trace?'<code>'+trace.split('\n').slice(-4).join('\n')+'</code>':'');
+}
+
+let LOOKUP = [];
+
+document.getElementById('goLookup').onclick=async function(){
+  document.getElementById('errLookup').classList.remove('show');
+  document.getElementById('lookupResults').innerHTML='';
+  const txt=document.getElementById('lookupBox').value.trim();
+  if(!txt) return showErr('errLookup','Paste at least one line, e.g. "MAPT, P301L".');
+  const fd=new FormData(); fd.append('pasted',txt);
+  this.disabled=true; this.innerHTML='<span class="spin"></span>Querying ClinVar…';
+  try{
+    const r=await fetch('/api/lookup_variants',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok){ showErr('errLookup',d.error||'Lookup failed.',d.trace); return; }
+    LOOKUP=d.results;
+    renderLookup(d.results,d.errors);
+  }catch(e){ showErr('errLookup','Network or server error: '+e.message); }
+  finally{ this.disabled=false; this.textContent='Look up in ClinVar'; }
+};
+
+function renderLookup(results,errors){
+  const box=document.getElementById('lookupResults');
+  let h='';
+  results.forEach((res,i)=>{
+    const n=res.candidates.length;
+    const auto=n===1;
+    const head = res.kind==='passthrough'
+      ? '<span style="font-weight:400;color:#1a7f37">— already unambiguous, used as given</span>'
+      : (auto ? '<span style="font-weight:400;color:#1a7f37">— 1 match, confirmed</span>'
+              : '<span style="font-weight:400;color:#b35900">— '+n+' equivalent candidates, pick one</span>');
+    h+='<div style="border:1px solid var(--line-strong);border-radius:8px;padding:12px;margin-bottom:10px">'+
+       '<p style="font-weight:600;margin:0 0 8px">'+esc(res.gene)+' '+esc(res.query)+' '+head+'</p>';
+    if(res.warnings&&res.warnings.length){
+      h+='<p style="font-size:12px;color:#b35900;margin:0 0 8px">'+res.warnings.map(esc).join('<br>')+'</p>';
+    }
+    if(!auto&&res.kind!=='passthrough'){
+      h+='<p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px">Same amino-acid '+
+         'change, different DNA change. Check your paper for the c. notation, or take '+
+         'the one with stronger evidence.</p>';
+    }
+    res.candidates.forEach((c,j)=>{
+      const id='cand_'+i+'_'+j;
+      const tick = c.protein_match==='exact'
+        ? '<span style="color:#1a7f37">exact match</span>'
+        : (c.protein_match==='aa_only'
+           ? '<span style="color:#b35900">same aa change, ClinVar numbers it on a different transcript &mdash; verify</span>'
+           : (c.protein_match===null?'<span style="color:var(--ink-soft)">unverified</span>':''));
+      h+='<label for="'+id+'" style="display:block;padding:8px;border-radius:6px;cursor:pointer;font-size:13px">'+
+         '<input type="radio" name="pick_'+i+'" id="'+id+'" value="'+j+'"'+(j===0?' checked':'')+'> '+
+         '<code>'+esc(c.genomic)+'</code>'+
+         (c.rsid?' &middot; '+esc(c.rsid):'')+
+         (c.significance?' &middot; '+esc(c.significance):'')+
+         (tick?' &middot; '+tick:'')+
+         '<br><span style="color:var(--ink-soft);margin-left:22px">'+esc(c.title||'')+'</span></label>';
+    });
+    h+='</div>';
+  });
+  if(errors&&errors.length){
+    h+='<div class="skip show"><h4>Not found — supply a coordinate or rsID directly</h4><ul>'+
+       errors.map(e=>'<li><b>'+esc(e[0])+'</b><br><span style="color:var(--ink-soft)">'+
+       esc(e[1])+'</span></li>').join('')+'</ul></div>';
+  }
+  if(results.length){
+    h+='<button class="go" id="goUsePicks" style="margin-top:4px">Use selected coordinates</button>';
+  }
+  box.innerHTML=h;
+  const btn=document.getElementById('goUsePicks');
+  if(btn) btn.onclick=usePicks;
+}
+
+function usePicks(){
+  const lines=[];
+  LOOKUP.forEach((res,i)=>{
+    const sel=document.querySelector('input[name="pick_'+i+'"]:checked');
+    if(!sel) return;
+    const c=res.candidates[parseInt(sel.value,10)];
+    lines.push(res.gene+', '+c.genomic);
+  });
+  if(!lines.length) return showErr('errLookup','Select a candidate for at least one variant.');
+  const box=document.getElementById('pasteBox');
+  const cur=box.value.trim();
+  box.value=(cur?cur+'\n':'')+lines.join('\n');
+  box.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+document.getElementById('go1').onclick=async function(){
+  const gene=document.getElementById('gene').value.trim();
+  const file=document.getElementById('file1').files[0];
+  const pasted=document.getElementById('pasteBox').value.trim();
+  document.getElementById('err1').classList.remove('show');
+  document.getElementById('out1').classList.remove('show');
+  if(!pasted && !file) return showErr('err1','Paste a mutation list or upload a file.');
+  this.disabled=true; this.innerHTML='<span class="spin"></span>Fetching gene(s), converting & parsing…';
+  const fd=new FormData(); fd.append('gene',gene);
+  if(pasted) fd.append('pasted',pasted);
+  else fd.append('file',file);
+  try{
+    const r=await fetch('/api/build_input',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok){ showErr('err1',d.error||'Failed.',d.trace); return; }
+    const rp=d.report;
+    if(rp.mode==='multi-gene'){
+      document.getElementById('stat1').innerHTML=
+        cell(rp.n_genes,'genes')+cell(rp.n_sequences_generated,'sequences')+
+        cell(rp.n_skipped,'skipped');
+    } else {
+      document.getElementById('stat1').innerHTML=
+        cell(rp.gene_name||'—','gene')+
+        cell(rp.n_sequences_generated,'sequences')+cell(rp.n_skipped,'skipped');
+    }
+    const sk=document.getElementById('skip1');
+    let html='';
+    if(rp.resolved&&rp.resolved.length){
+      html+='<h4>Resolved — verify the coordinate system used for each variant</h4><ul>'+
+        rp.resolved.map(v=>{
+          const g=v.gene?esc(v.gene)+' ':'';
+          const via=esc(v.coordinate_system||'');
+          const tx=v.transcript_used?' · transcript '+esc(v.transcript_used):'';
+          const gen=v.genomic?' · '+esc(v.genomic):'';
+          return '<li><b>'+g+esc(v.input)+'</b> — '+via+tx+gen+'</li>';
+        }).join('')+'</ul>';
+    }
+    if(rp.warnings&&rp.warnings.length){
+      html+='<h4>Conversion warnings — check these</h4><ul>'+
+        rp.warnings.map(s=>'<li><b>'+esc(s[0])+'</b> — '+esc(s[1])+'</li>').join('')+'</ul>';
+    }
+    if(rp.skipped&&rp.skipped.length){
+      html+='<h4>Skipped — needs a transcript or manual curation</h4><ul>'+
+        rp.skipped.map(s=>'<li><b>'+esc(s[0])+'</b> — '+esc(s[1])+'</li>').join('')+'</ul>';
+    }
+    if(html){ sk.style.display='block'; sk.innerHTML=html; } else sk.style.display='none';
+    document.getElementById('out1').classList.add('show');
+  }catch(e){ showErr('err1','Network or server error: '+e.message); }
+  finally{ this.disabled=false; this.textContent='Generate input sequences'; }
+};
+
+document.getElementById('go3').onclick=async function(){
+  const file=document.getElementById('file3').files[0];
+  const topn=document.getElementById('topn').value;
+  document.getElementById('err3').classList.remove('show');
+  document.getElementById('out3').classList.remove('show');
+  if(!file) return showErr('err3','Upload the PRIDICT summary CSV.');
+  this.disabled=true; this.innerHTML='<span class="spin"></span>Assembling…';
+  const fd=new FormData(); fd.append('file',file); fd.append('top_n',topn);
+  try{
+    const r=await fetch('/api/build_library',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.ok){ showErr('err3',d.error||'Failed.',d.trace); return; }
+    const rp=d.report;
+    document.getElementById('stat3').innerHTML=
+      cell(rp.n_constructs_built,'constructs')+
+      cell(rp.n_mutations,'mutations')+
+      cell(rp.top_n_per_mutation,'per mutation')+
+      cell(rp.n_bystander_constructs,'with bystander');
+    const sk=document.getElementById('skip3');
+    if(rp.notes&&rp.notes.length){ sk.style.display='block';
+      sk.innerHTML='<h4>Build notes</h4><ul>'+
+        rp.notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>';
+    } else if(sk){ sk.style.display='none'; }
+    document.getElementById('out3').classList.add('show');
+  }catch(e){ showErr('err3','Network or server error: '+e.message); }
+  finally{ this.disabled=false; this.textContent='Assemble self-targeting library'; }
+};
+
+// ---- QC: single source of truth for the criteria (name -> label + why) ----
+const QC_INFO = {
+  length_max:              ['Length <= 300 bp', 'Within the oligo-pool synthesis limit — shorter is fine, only exceeding it fails', 'longer than 300 bp'],
+  elements_present_ordered:['Fixed elements present, correct order', "5' primer -> BsmBI/scaffold -> tevopreQ1 -> polyT -> 3' primer", 'fixed elements missing or out of order'],
+  spacer_matches_pegRNA:   ['Spacer matches PRIDICT design', "Spacer sits right after the 5' primer, no frame shift or mis-join", 'spacer does not match the design'],
+  selftarget_integrity:    ['Self-targeting intact', "The target's reverse complement is correctly embedded — the core of self-targeting", 'self-targeting broken (target not embedded)'],
+  spacer_pbs_rt_seamless:  ['Spacer / PBS / RT seamless', 'Nick sits inside the protospacer; PBS abuts RT with no gap or overlap; PBS reconstructs the initial target and RT the mutated target exactly', 'spacer/PBS/RT not seamless'],
+  rt_encodes_edit:         ['RT template carries the edit', 'The intended mutation falls inside the RT window (mutated vs initial target differ there)', 'RT template does not carry the edit'],
+  barcode_unique:          ['Barcode unique', 'Duplicate barcodes make sequencing reads unassignable', 'duplicate barcode'],
+  no_extra_bsmbi:          ['No extra BsmBI/Esp3I sites', 'Stray CGTCTC/GAGACG inside the construct breaks Golden Gate cloning', 'HAS extra BsmBI/Esp3I site(s)'],
+  no_extra_primer_sites:   ['No extra primer-binding sites', 'Unexpected primer sites disturb PCR amplification', 'HAS extra primer-binding site(s)'],
+  polyT_intact:            ['polyT terminator intact', 'Pol III transcription terminates properly', 'polyT terminator missing or broken'],
+  no_long_homopolymer:     ['No long homopolymer (>=16)', 'Avoids synthesis / sequencing errors', 'has a long homopolymer (>=16)'],
+};
+
+// render the always-visible criteria list on page load
+(function renderQCcriteria(){
+  const ul=document.getElementById('qcCriteria'); if(!ul) return;
+  ul.innerHTML=Object.values(QC_INFO).map(
+    ([label,why])=>'<li><b style="color:var(--ink)">'+esc(label)+'</b> — '+esc(why)+'</li>').join('');
+})();
+
+// shared QC runner — used by the Step-4 button AND the one-click button
+async function runQC(btn){
+  document.getElementById('errQC').classList.remove('show');
+  document.getElementById('outQC').classList.remove('show');
+  if(btn){ btn.disabled=true; btn.dataset.txt=btn.innerHTML;
+           btn.innerHTML='<span class="spin"></span>Checking constructs…'; }
+  try{
+    const r=await fetch('/api/run_qc',{method:'POST',body:new FormData()});
+    const d=await r.json();
+    if(!d.ok){ showErr('errQC',d.error||'QC failed.',d.trace);
+               document.getElementById('qcstage').scrollIntoView({behavior:'smooth',block:'start'}); return; }
+    const rp=d.report;
+    const allPass = rp.n_fail===0;
+    document.getElementById('statQC').innerHTML=
+      cell(rp.n_total,'checked')+cell(rp.n_pass,'passed')+cell(rp.n_fail,'failed')+
+      cell(allPass?'all pass':'see below','verdict');
+
+    // per-check results, using the readable labels
+    let html='';
+    if(rp.n_dropped_from_csv){
+      const dropped=(rp.drop_checks||[]).map(c=>(QC_INFO[c]?QC_INFO[c][0]:c)).join(', ');
+      html+='<div class="skip show" style="margin:0 0 12px"><b>'+rp.n_dropped_from_csv+
+        ' construct(s) removed from the downloadable CSV</b> — they failed a hard check ('+
+        esc(dropped)+') and cannot be used. They are still listed below so you can see '+
+        'what was dropped. The CSV now contains '+rp.n_in_csv+' construct(s).</div>';
+    }
+    html+='<h4 style="margin:14px 0 6px">Per-check results</h4>'+
+      '<ul style="margin:0;padding-left:18px;line-height:1.7">';
+    for(const [check,nfail] of Object.entries(rp.failures_per_check)){
+      const info=QC_INFO[check]||[check,''];
+      const mark = nfail===0 ? '<span style="color:#1a7f37">pass</span>'
+                             : '<span style="color:#b35900">'+nfail+' failed</span>';
+      html+='<li><b style="color:var(--ink)">'+esc(info[0])+'</b> — '+mark+
+            '<br><span style="font-size:12px;color:var(--ink-soft)">'+esc(info[1])+'</span></li>';
+    }
+    html+='</ul>';
+
+    if(rp.fail_details && rp.fail_details.length){
+      html+='<h4 style="margin:14px 0 6px">Flagged constructs (first '+
+        Math.min(rp.fail_details.length,30)+' of '+rp.n_fail+')</h4>'+
+        '<ul style="margin:0;padding-left:18px;line-height:1.6;font-size:13px">';
+      html+=rp.fail_details.slice(0,30).map(f=>{
+        const reasons=f[1].map(c=>(QC_INFO[c]?(QC_INFO[c][2]||QC_INFO[c][0]):c)).join('; ');
+        return '<li><b>'+esc(f[0])+'</b> — '+esc(reasons)+'</li>';
+      }).join('');
+      html+='</ul>';
+    } else {
+      html+='<p style="margin-top:10px;color:#1a7f37"><b>All constructs passed every check.</b></p>';
+    }
+    if(rp.notes && rp.notes.length){
+      html+='<p style="margin-top:10px;color:#b35900;font-size:13px">'+
+        rp.notes.map(esc).join('<br>')+'</p>';
+    }
+    document.getElementById('listQC').innerHTML=html;
+    document.getElementById('outQC').classList.add('show');
+    document.getElementById('qcstage').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){ showErr('errQC','Network or server error: '+e.message);
+             document.getElementById('qcstage').scrollIntoView({behavior:'smooth',block:'start'}); }
+  finally{ if(btn){ btn.disabled=false; btn.innerHTML=btn.dataset.txt; } }
+}
+
+document.getElementById('goQC').onclick=function(){ runQC(this); };
+document.getElementById('goQCall').onclick=function(){ runQC(this); };
+
+// ===== OptiPrime engine pane (independent one-click + QC) =====
+(function(){
+  function wire(dropId, fileId, phId){
+    const d=document.getElementById(dropId), f=document.getElementById(fileId), p=document.getElementById(phId);
+    if(!d) return;
+    d.onclick=()=>f.click();
+    f.onchange=()=>{ if(f.files[0]) p.textContent=f.files.length>1?(f.files.length+' files'):f.files[0].name; };
+    d.ondragover=e=>{e.preventDefault();d.classList.add('over');};
+    d.ondragleave=()=>d.classList.remove('over');
+    d.ondrop=e=>{e.preventDefault();d.classList.remove('over');
+      if(e.dataTransfer.files.length){f.files=e.dataTransfer.files;
+        p.textContent=f.files.length>1?(f.files.length+' files'):f.files[0].name;}};
+  }
+  wire('dropSnapAll_op','fileSnapAll_op','phSnapAll_op');
+  wire('dropCsvAll_op','fileCsvAll_op','phCsvAll_op');
+
+  const go=document.getElementById('goAll_op');
+  if(go) go.onclick=async function(){
+    document.getElementById('errAll_op').classList.remove('show');
+    document.getElementById('outAll_op').style.display='none';
+    const fd=new FormData();
+    const dna=document.getElementById('fileSnapAll_op').files;
+    const csv=document.getElementById('fileCsvAll_op').files[0];
+    if(dna.length){
+      for(const f of dna) fd.append('files',f);
+      const bd=document.getElementById('bystDir_op').value;
+      if(bd&&bd!=='none') fd.append('bystander',bd);
+    } else if(csv){
+      fd.append('file',csv);
+    } else {
+      showErr('errAll_op','Provide SnapGene files or a mutation list.'); return;
+    }
+    fd.append('top_n',document.getElementById('topn_op').value.trim()||'10');
+    fd.append('optiprime_home',document.getElementById('optiprimeHomeAll').value.trim());
+    fd.append('optiprime_env',document.getElementById('optiprimeEnvAll').value.trim());
+    fd.append('optiprime_settings',JSON.stringify(opSettings('All')));
+    this.disabled=true; this.textContent='Starting…';
+    setProgOp(5,'Starting…',true);
+    try{
+      const r=await fetch('/api/run_all_optiprime_async',{method:'POST',body:fd});
+      const d=await r.json();
+      if(!d.ok || !d.job_id){ showErr('errAll_op',d.error||'Failed to start.',d.trace);
+        document.getElementById('progAll_op').style.display='none';
+        this.disabled=false; this.innerHTML='Build input → Run OptiPrime → Assemble library'; return; }
+      pollOptiprime(d.job_id, this);
+    }catch(e){
+      showErr('errAll_op','Network or server error: '+e.message);
+      document.getElementById('progAll_op').style.display='none';
+      this.disabled=false; this.innerHTML='Build input → Run OptiPrime → Assemble library';
+    }
+  };
+
+  const goqc=document.getElementById('goQC_op');
+  if(goqc) goqc.onclick=async function(){
+    document.getElementById('errQC_op').classList.remove('show');
+    document.getElementById('outQC_op').style.display='none';
+    this.disabled=true; this.textContent='Running QC…';
+    try{
+      const r=await fetch('/api/run_qc_op',{method:'POST',body:new FormData()});
+      const d=await r.json();
+      if(!d.ok){ showErr('errQC_op',d.error||'Failed.',d.trace); return; }
+      const rep=d.report||{};
+      document.getElementById('statQC_op').innerHTML=
+        cell(rep.n_in_csv,'passing')+cell(rep.n_dropped_from_csv,'dropped')+cell(rep.n_total,'total');
+      document.getElementById('outQC_op').style.display='block';
+    }catch(e){ showErr('errQC_op','Network or server error: '+e.message); }
+    finally{ this.disabled=false; this.textContent='Run quality check'; }
+  };
+
+  // progress bar for the OptiPrime one-click
+  window.setProgOp=function(pct,label,indet){
+    document.getElementById('progAll_op').style.display='block';
+    const f=document.getElementById('pfillAll_op');
+    if(indet){ f.classList.add('indet'); f.style.width=''; }
+    else { f.classList.remove('indet'); f.style.width=(pct||0)+'%'; }
+    document.getElementById('plabelAll_op').textContent=label||'';
+  };
+  const OP_LABEL={input:'Building input',optiprime:'Running OptiPrime',
+    assemble:'Assembling library',done:'Done',error:'Error'};
+  window.pollOptiprime=function(jobId,btn){
+    const tick=async()=>{
+      let p;
+      try{ p=await (await fetch('/api/progress/'+jobId)).json(); }
+      catch(e){ setTimeout(tick,3000); return; }
+      const label=OP_LABEL[p.stage]||p.stage||'';
+      if(p.status==='running'){
+        // stage-based bar; OptiPrime stage advances by fixed percent (not exact per-mutation)
+        setProgOp(p.percent||0,(p.message||label)+'…',!p.percent);
+        setTimeout(tick,2500);
+      } else if(p.status==='done'){
+        setProgOp(100,'Done.',false);
+        const rr=p.result||{}, op=rr.optiprime||{}, s3=rr.stage3||{};
+        let stats=cell(op.n_scored_pegRNAs,'pegRNAs scored')+
+                  cell(op.n_runs,'protospacer runs')+
+                  cell(s3.n_constructs_built!=null?s3.n_constructs_built:'—','constructs');
+        if(op.n_skipped) stats+=cell(op.n_skipped,'edits skipped');
+        document.getElementById('statAll_op').innerHTML=stats+opWarnBanner(op);
+        document.getElementById('outAll_op').style.display='block';
+        btn.disabled=false; btn.innerHTML='Build input → Run OptiPrime → Assemble library';
+        setTimeout(()=>{document.getElementById('progAll_op').style.display='none';},1500);
+      } else if(p.status==='error'){
+        document.getElementById('progAll_op').style.display='none';
+        showErr('errAll_op',p.error||'Run failed.',p.trace);
+        btn.disabled=false; btn.innerHTML='Build input → Run OptiPrime → Assemble library';
+      } else { setTimeout(tick,2500); }
+    };
+    tick();
+  };
+})();
+
+// A run that silently drops input sequences must never look like a clean run:
+// 400 bystander designs once went missing with the interface still all green.
+function opWarnBanner(op){
+  if(!op || !op.n_skipped) return '';
+  const rc = op.skipped_reason_counts || {};
+  const reasons = Object.keys(rc).sort((a,b)=>rc[b]-rc[a]).slice(0,3)
+                    .map(k=>esc(k)+' \u00d7'+rc[k]).join('; ');
+  const total = op.n_input_sequences ? (' of '+op.n_input_sequences) : '';
+  const byst = op.n_bystander_skipped
+    ? ' <b>'+op.n_bystander_skipped+'</b> of them were bystander designs.' : '';
+  const first = (op.skipped||[]).slice(0,3)
+      .map(x=>'<li>'+esc(String(x[0]))+' — '+esc(String(x[1])).slice(0,160)+'</li>').join('');
+  return '<div style="margin-top:14px;padding:12px 14px;border:1px solid #e0a04a;'
+       + 'border-left-width:4px;border-radius:6px;background:#fdf6ec;color:#7a4a00;'
+       + 'font-size:13px;line-height:1.55">'
+       + '<b>'+op.n_skipped+' input sequence(s)'+total+' produced no pegRNA and are '
+       + 'not in the library.</b>'+byst
+       + (reasons?'<div style="margin-top:6px">Reasons: '+reasons+'</div>':'')
+       + (first?'<ul style="margin:6px 0 0 18px;padding:0">'+first+'</ul>':'')
+       + '</div>';
+}
+
+function opSettings(sfx){
+  const g=id=>{const el=document.getElementById(id+sfx); return el?el.value.trim():'';};
+  return {cell_type:g('opCell'), pe_type:g('opPeType'), cas9_type:g('opCas9'),
+          rt_name:g('opRt'), scaffold:g('opScaffold'), motif:g('opMotif'),
+          cas9_pam:g('opPam'), time:parseFloat(g('opTime'))||4.0};
+}
+
+function cell(v,l){return '<div><div class="v">'+esc(String(v))+'</div><div class="l">'+l+'</div></div>';}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+// ===== Analysis tab (NGS) =====
+(function(){
+  // top-level Design / Analysis toggle
+  const vD=document.getElementById('view-design'), vA=document.getElementById('view-analysis');
+  const nD=document.getElementById('nav-design'), nA=document.getElementById('nav-analysis');
+  function show(d){ vD.style.display=d?'':'none'; vA.style.display=d?'none':'';
+    nD.classList.toggle('active',d); nA.classList.toggle('active',!d); }
+  nD.onclick=()=>show(true); nA.onclick=()=>show(false);
+
+  // engine sub-tabs: PRIDICT2.0 vs OptiPrime (within the Design view)
+  (function(){
+    const btns=document.querySelectorAll('[data-engine]');
+    const panes={'eng-pridict':document.getElementById('eng-pridict'),
+                 'eng-optiprime':document.getElementById('eng-optiprime')};
+    btns.forEach(b=>b.onclick=()=>{
+      btns.forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      Object.entries(panes).forEach(([id,el])=>{ if(el) el.style.display=(id===b.dataset.engine)?'':'none'; });
+    });
+  })();
+
+  // reusable dropzone wiring
+  function wireDrop(dropId, fileId, phId){
+    const drop=document.getElementById(dropId), file=document.getElementById(fileId), ph=document.getElementById(phId);
+    drop.onclick=()=>file.click();
+    file.onchange=()=>{ if(file.files[0]) ph.textContent=file.files[0].name; };
+    drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+    drop.ondragleave=()=>drop.classList.remove('over');
+    drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');
+      if(e.dataTransfer.files[0]){file.files=e.dataTransfer.files; ph.textContent=file.files[0].name;}};
+    return file;
+  }
+  const aFile=wireDrop('a_drop','a_file','a_ph');
+  const bFile=wireDrop('b_drop','b_file','b_ph');
+
+  function setErr(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.classList.add('show'); }
+  function clr(...ids){ ids.forEach(id=>document.getElementById(id).classList.remove('show')); }
+
+  // ---- Card A: generate sample sheets only ----
+  document.getElementById('a_go').onclick=async function(){
+    clr('a_err','a_out');
+    if(!aFile.files[0]) return setErr('a_err','Upload a plate map .xlsx first.');
+    const fd=new FormData(); fd.append('plate_map',aFile.files[0]);
+    const pipe=document.getElementById('a_pipeline').value.trim();
+    const lib=document.getElementById('a_lib').value.trim();
+    const raw=document.getElementById('a_raw').value.trim();
+    if(!pipe) return setErr('a_err','Missing: Pipeline directory');
+    if(!lib)  return setErr('a_err','Missing: Library name');
+    fd.append('pipeline_dir',pipe); fd.append('library_name',lib); fd.append('raw_dir',raw);
+    const btn=this; btn.disabled=true; btn.textContent='Generating\u2026';
+    try{
+      const d=await (await fetch('/api/analysis/prepare',{method:'POST',body:fd})).json();
+      if(!d.ok){ setErr('a_err',d.error||'Failed.'); return; }
+      const rows=d.samples.map(x=>'<li style="margin:2px 0"><b>'+x.sample+'</b> &mdash; '+x.editor+' rep'+x.replicate+', '+x.wells+' wells</li>').join('');
+      const dlS='/api/analysis/download_sheet?path='+encodeURIComponent(d.samples_csv);
+      const dlC='/api/analysis/download_sheet?path='+encodeURIComponent(d.combine_csv);
+      document.getElementById('a_stat').innerHTML=
+        '<div style="display:block">'+
+          '<div style="font-size:15px;font-weight:600;margin-bottom:4px">'+d.n_samples+' samples written</div>'+
+          '<div style="font-size:12px;color:var(--ink-soft);word-break:break-all;margin-bottom:10px">'+
+            d.samples_csv+'<br>'+d.combine_csv+'</div>'+
+          '<div style="display:flex;gap:10px;margin-bottom:12px">'+
+            '<a class="dl" href="'+dlS+'" style="display:inline-block">&darr; samples.csv</a>'+
+            '<a class="dl" href="'+dlC+'" style="display:inline-block">&darr; combine.csv</a></div>'+
+          '<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.5">'+rows+'</ul>'+
+        '</div>';
+      document.getElementById('a_out').classList.add('show');
+    }catch(e){ setErr('a_err','Network/server error: '+e.message); }
+    finally{ btn.disabled=false; btn.textContent='Generate sample sheets'; }
+  };
+
+  // ---- Card B: full run ----
+  const BLBL='Merge \u2192 Run pipeline \u2192 Aggregate';
+  function bProg(p,l){ document.getElementById('b_prog').style.display='block';
+    document.getElementById('b_pfill').style.width=(p||0)+'%';
+    document.getElementById('b_plabel').textContent=l||''; }
+
+  // auto-load config values into the collapsible fields when pipeline dir is set
+  async function loadConfig(){
+    const pipe=document.getElementById('b_pipeline').value.trim();
+    const note=document.getElementById('b_cfgnote');
+    if(!pipe) return;
+    try{
+      const d=await (await fetch('/api/analysis/config?pipeline_dir='+encodeURIComponent(pipe))).json();
+      if(!d.ok){ note.style.display='block'; note.textContent='Config not loaded: '+(d.error||'')+' — parameter fields left blank (will keep existing config values).'; return; }
+      let filled=0;
+      document.querySelectorAll('#view-analysis [data-cfg]').forEach(el=>{
+        const k=el.getAttribute('data-cfg');
+        if(d.values[k]!==undefined){ el.value=d.values[k]; filled++; }
+      });
+      note.style.display='block';
+      note.textContent='Loaded '+filled+' parameters from this pipeline\u2019s config. Edit only what you need; blanks keep the existing value.';
+    }catch(e){ /* leave blank; run will keep config as-is */ }
+  }
+  document.getElementById('b_pipeline').addEventListener('change', loadConfig);
+  loadConfig();  // try once on load (pipeline dir is prefilled)
+
+  document.getElementById('b_go').onclick=async function(){
+    clr('b_err','b_out'); document.getElementById('b_dl').style.display='none';
+    if(!bFile.files[0]) return setErr('b_err','Upload a plate map .xlsx first.');
+    const fd=new FormData(); fd.append('plate_map',bFile.files[0]);
+    const F={pipeline_dir:'b_pipeline',raw_dir:'b_raw',library_name:'b_lib',date:'b_date',template:'b_template',cores:'b_cores'};
+    for(const k in F){ const v=document.getElementById(F[k]).value.trim();
+      if(!v) return setErr('b_err','Missing field: '+k); fd.append(k,v); }
+    // config overrides from the collapsible fields
+    document.querySelectorAll('#view-analysis [data-cfg]').forEach(el=>{
+      const v=el.value.trim(); if(v!=='') fd.append('cfg_'+el.getAttribute('data-cfg'), v);
+    });
+    const btn=this; btn.disabled=true; btn.textContent='Running\u2026 (keep this tab open)';
+    bProg(2,'Starting\u2026');
+    let jobId;
+    try{ const d=await (await fetch('/api/analysis/run_async',{method:'POST',body:fd})).json();
+      if(!d.ok){ setErr('b_err',d.error||'Failed to start.'); btn.disabled=false; btn.textContent=BLBL; return; }
+      jobId=d.job_id;
+    }catch(e){ setErr('b_err','Network/server error: '+e.message); btn.disabled=false; btn.textContent=BLBL; return; }
+
+    const poll=setInterval(async()=>{
+      let p; try{ p=await (await fetch('/api/analysis/progress/'+jobId)).json(); }catch(e){ return; }
+      bProg(p.percent, p.message||p.stage);
+      if(p.status==='done'){ clearInterval(poll); btn.disabled=false; btn.textContent=BLBL; bProg(100,'Done.');
+        const res=p.result||{};
+        document.getElementById('b_stat').innerHTML='<div class="v">'+(res.n_samples||'')+
+          '</div><div class="l">samples analyzed &middot; <code>'+(res.output||'')+'</code></div>';
+        const dl=document.getElementById('b_dl'); dl.href='/api/analysis/download/'+jobId; dl.style.display='inline-block';
+        document.getElementById('b_out').classList.add('show');
+      } else if(p.status==='error'){ clearInterval(poll); btn.disabled=false; btn.textContent=BLBL;
+        setErr('b_err',p.error||'Pipeline failed.'); }
+    },2000);
+  };
+})();
+</script>
+</body>
+</html>

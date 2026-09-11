@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+venv/
+
+# Third-party engines - users install these themselves
+optiprime-src/
+PRIDICT2/
+
+# Run outputs and debugging artefacts
+*.txt.gz
+predictions/
+*_out/
+uploads/
+
+# Experimental data
+*.xlsx
+*.dna
+*.fastq
+*.fastq.gz
